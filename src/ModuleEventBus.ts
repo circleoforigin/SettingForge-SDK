@@ -1,4 +1,5 @@
 import type {
+  HostEventMessage,
   HostMessage,
   HostResponseMessage,
 } from './HostMessage';
@@ -8,26 +9,51 @@ interface PendingRequest {
   reject: (error: Error) => void;
 }
 
+type EventHandler = ( message: HostEventMessage ) => void;
+
 export class ModuleEventBus {
   private readonly moduleId: string;
 
   private readonly pending =
     new Map<string, PendingRequest>();
 
+  private readonly eventHandlers =
+    new Map<
+      string,
+      Set<EventHandler>
+    >();
+
   private readonly handleMessage =
-    (event: MessageEvent) => {
-      const message =
-        event.data as HostMessage | undefined;
+  (event: MessageEvent) => {
+    const message =
+      event.data as
+        | HostMessage
+        | undefined;
 
-      if (
-        !message ||
-        message.kind !== 'response'
-      ) {
-        return;
-      }
+    if (!message) {
+      return;
+    }
 
-      this.handleResponse(message);
-    };
+    if (
+      message.kind ===
+      'response'
+    ) {
+      this.handleResponse(
+        message
+      );
+
+      return;
+    }
+
+    if (
+      message.kind ===
+      'event'
+    ) {
+      this.dispatchEvent(
+        message
+      );
+    }
+  };
 
   constructor(moduleId: string) {
     this.moduleId = moduleId;
@@ -62,6 +88,44 @@ export class ModuleEventBus {
       '*'
     );
   }
+
+  subscribe(
+  type: string,
+  handler: EventHandler
+): () => void {
+  let handlers =
+    this.eventHandlers.get(
+      type
+    );
+
+  if (!handlers) {
+    handlers =
+      new Set<EventHandler>();
+
+    this.eventHandlers.set(
+      type,
+      handlers
+    );
+  }
+
+  handlers.add(
+    handler
+  );
+
+  return () => {
+    handlers?.delete(
+      handler
+    );
+
+    if (
+      handlers?.size === 0
+    ) {
+      this.eventHandlers.delete(
+        type
+      );
+    }
+  };
+}
 
   request<T>(
     type: string,
@@ -123,7 +187,30 @@ export class ModuleEventBus {
     }
 
     this.pending.clear();
+    this.eventHandlers.clear();
   }
+
+  private dispatchEvent(
+  message: HostEventMessage
+): void {
+  const handlers =
+    this.eventHandlers.get(
+      message.type
+    );
+
+  if (!handlers) {
+    return;
+  }
+
+  for (
+    const handler
+    of handlers
+  ) {
+    handler(
+      message
+    );
+  }
+}
 
   private handleResponse(
     response: HostResponseMessage
