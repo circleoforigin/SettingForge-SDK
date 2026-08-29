@@ -1,21 +1,43 @@
 import type {
   HostEventMessage,
   HostMessage,
+  HostRequestMessage,
   HostResponseMessage,
 } from './HostMessage';
 
 interface PendingRequest {
-  resolve: (value: unknown) => void;
-  reject: (error: Error) => void;
+  resolve: (
+    value: unknown
+  ) => void;
+
+  reject: (
+    error: Error
+  ) => void;
 }
 
-type EventHandler = ( message: HostEventMessage ) => void;
+type EventHandler =
+  (
+    message:
+      HostEventMessage
+  ) => void;
+
+type RequestHandler =
+  (
+    message:
+      HostRequestMessage
+  ) =>
+    | Promise<unknown>
+    | unknown;
 
 export class ModuleEventBus {
-  private readonly moduleId: string;
+  private readonly moduleId:
+    string;
 
   private readonly pending =
-    new Map<string, PendingRequest>();
+    new Map<
+      string,
+      PendingRequest
+    >();
 
   private readonly eventHandlers =
     new Map<
@@ -23,40 +45,63 @@ export class ModuleEventBus {
       Set<EventHandler>
     >();
 
+  private readonly requestHandlers =
+    new Map<
+      string,
+      RequestHandler
+    >();
+
   private readonly handleMessage =
-  (event: MessageEvent) => {
-    const message =
-      event.data as
-        | HostMessage
-        | undefined;
+    (
+      event:
+        MessageEvent
+    ) => {
+      const message =
+        event.data as
+          | HostMessage
+          | undefined;
 
-    if (!message) {
-      return;
-    }
+      if (!message) {
+        return;
+      }
 
-    if (
-      message.kind ===
-      'response'
-    ) {
-      this.handleResponse(
-        message
-      );
+      if (
+        message.kind ===
+        'response'
+      ) {
+        this.handleResponse(
+          message
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (
-      message.kind ===
-      'event'
-    ) {
-      this.dispatchEvent(
-        message
-      );
-    }
-  };
+      if (
+        message.kind ===
+        'event'
+      ) {
+        this.dispatchEvent(
+          message
+        );
 
-  constructor(moduleId: string) {
-    this.moduleId = moduleId;
+        return;
+      }
+
+      if (
+        message.kind ===
+        'request'
+      ) {
+        void this.handleRequest(
+          message
+        );
+      }
+    };
+
+  constructor(
+    moduleId: string
+  ) {
+    this.moduleId =
+      moduleId;
 
     window.addEventListener(
       'message',
@@ -65,7 +110,10 @@ export class ModuleEventBus {
   }
 
   get hosted(): boolean {
-    return window.parent !== window;
+    return (
+      window.parent !==
+      window
+    );
   }
 
   emit(
@@ -79,10 +127,17 @@ export class ModuleEventBus {
     window.parent.postMessage(
       {
         kind: 'event',
-        id: crypto.randomUUID(),
-        sourceModuleId: this.moduleId,
+        id:
+          crypto.randomUUID(),
+
+        sourceModuleId:
+          this.moduleId,
+
         type,
-        timestamp: Date.now(),
+
+        timestamp:
+          Date.now(),
+
         payload,
       },
       '*'
@@ -90,42 +145,66 @@ export class ModuleEventBus {
   }
 
   subscribe(
-  type: string,
-  handler: EventHandler
-): () => void {
-  let handlers =
-    this.eventHandlers.get(
-      type
-    );
+    type: string,
+    handler:
+      EventHandler
+  ): () => void {
+    let handlers =
+      this.eventHandlers.get(
+        type
+      );
 
-  if (!handlers) {
-    handlers =
-      new Set<EventHandler>();
+    if (!handlers) {
+      handlers =
+        new Set<EventHandler>();
 
-    this.eventHandlers.set(
-      type,
-      handlers
-    );
-  }
+      this.eventHandlers.set(
+        type,
+        handlers
+      );
+    }
 
-  handlers.add(
-    handler
-  );
-
-  return () => {
-    handlers?.delete(
+    handlers.add(
       handler
     );
 
-    if (
-      handlers?.size === 0
-    ) {
-      this.eventHandlers.delete(
-        type
+    return () => {
+      handlers?.delete(
+        handler
       );
-    }
-  };
-}
+
+      if (
+        handlers?.size === 0
+      ) {
+        this.eventHandlers.delete(
+          type
+        );
+      }
+    };
+  }
+
+  registerRequestHandler(
+    type: string,
+    handler:
+      RequestHandler
+  ): () => void {
+    this.requestHandlers.set(
+      type,
+      handler
+    );
+
+    return () => {
+      if (
+        this.requestHandlers.get(
+          type
+        ) === handler
+      ) {
+        this.requestHandlers.delete(
+          type
+        );
+      }
+    };
+  }
 
   request<T>(
     type: string,
@@ -143,24 +222,38 @@ export class ModuleEventBus {
       crypto.randomUUID();
 
     return new Promise<T>(
-      (resolve, reject) => {
+      (
+        resolve,
+        reject
+      ) => {
         this.pending.set(
           id,
           {
-            resolve: (value) =>
-              resolve(value as T),
+            resolve:
+              (value) =>
+                resolve(
+                  value as T
+                ),
+
             reject,
           }
         );
 
         window.parent.postMessage(
           {
-            kind: 'request',
+            kind:
+              'request',
+
             id,
+
             sourceModuleId:
               this.moduleId,
+
             type,
-            timestamp: Date.now(),
+
+            timestamp:
+              Date.now(),
+
             payload,
           },
           '*'
@@ -176,8 +269,8 @@ export class ModuleEventBus {
     );
 
     for (
-      const pending of
-      this.pending.values()
+      const pending
+      of this.pending.values()
     ) {
       pending.reject(
         new Error(
@@ -188,32 +281,145 @@ export class ModuleEventBus {
 
     this.pending.clear();
     this.eventHandlers.clear();
+    this.requestHandlers.clear();
   }
 
   private dispatchEvent(
-  message: HostEventMessage
-): void {
-  const handlers =
-    this.eventHandlers.get(
-      message.type
-    );
+    message:
+      HostEventMessage
+  ): void {
+    const handlers =
+      this.eventHandlers.get(
+        message.type
+      );
 
-  if (!handlers) {
-    return;
+    if (!handlers) {
+      return;
+    }
+
+    for (
+      const handler
+      of handlers
+    ) {
+      handler(
+        message
+      );
+    }
   }
 
-  for (
-    const handler
-    of handlers
-  ) {
-    handler(
-      message
+  private async handleRequest(
+    request:
+      HostRequestMessage
+  ): Promise<void> {
+    const handler =
+      this.requestHandlers.get(
+        request.type
+      );
+
+    let response:
+      HostResponseMessage;
+
+    if (!handler) {
+      response = {
+        kind:
+          'response',
+
+        id:
+          crypto.randomUUID(),
+
+        requestId:
+          request.id,
+
+        sourceModuleId:
+          this.moduleId,
+
+        type:
+          `${request.type}.response`,
+
+        timestamp:
+          Date.now(),
+
+        ok:
+          false,
+
+        error:
+          `Module "${this.moduleId}" has no handler for "${request.type}".`,
+      };
+    } else {
+      try {
+        const payload =
+          await handler(
+            request
+          );
+
+        response = {
+          kind:
+            'response',
+
+          id:
+            crypto.randomUUID(),
+
+          requestId:
+            request.id,
+
+          sourceModuleId:
+            this.moduleId,
+
+          type:
+            `${request.type}.response`,
+
+          timestamp:
+            Date.now(),
+
+          ok:
+            true,
+
+          payload,
+        };
+      } catch (error) {
+        response = {
+          kind:
+            'response',
+
+          id:
+            crypto.randomUUID(),
+
+          requestId:
+            request.id,
+
+          sourceModuleId:
+            this.moduleId,
+
+          type:
+            `${request.type}.response`,
+
+          timestamp:
+            Date.now(),
+
+          ok:
+            false,
+
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Module request failed.',
+        };
+      }
+    }
+
+    if (!this.hosted) {
+      return;
+    }
+
+    window.parent.postMessage(
+      response,
+      '*'
     );
   }
-}
 
   private handleResponse(
-    response: HostResponseMessage
+    response:
+      HostResponseMessage
   ): void {
     const pending =
       this.pending.get(
@@ -228,7 +434,9 @@ export class ModuleEventBus {
       response.requestId
     );
 
-    if (response.ok) {
+    if (
+      response.ok
+    ) {
       pending.resolve(
         response.payload
       );
@@ -239,7 +447,7 @@ export class ModuleEventBus {
     pending.reject(
       new Error(
         response.error ??
-          'SettingForge request failed.'
+        'SettingForge request failed.'
       )
     );
   }
