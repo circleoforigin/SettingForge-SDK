@@ -3,6 +3,13 @@ export {
 } from './ModuleEventBus';
 
 export type {
+  ActionFieldType,
+  ActionFieldDefinition,
+  ActionDefinition,
+  RegisteredActionDefinition,
+} from './ActionDefinition';
+
+export type {
   HostEventMessage,
   HostRequestMessage,
   HostResponseMessage,

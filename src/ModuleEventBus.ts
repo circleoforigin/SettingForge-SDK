@@ -4,6 +4,10 @@ import type {
   HostRequestMessage,
   HostResponseMessage,
 } from './HostMessage';
+import type {
+  ActionDefinition,
+  RegisteredActionDefinition,
+} from './ActionDefinition';
 
 interface PendingRequest {
   resolve: (
@@ -29,6 +33,18 @@ type RequestHandler =
     | Promise<unknown>
     | unknown;
 
+type ActionsChangedHandler =
+  (actions: RegisteredActionDefinition[]) => void;
+
+function cloneAction(
+  action: RegisteredActionDefinition
+): RegisteredActionDefinition {
+  return {
+    ...action,
+    fields: action.fields?.map((field) => ({ ...field })),
+  };
+}
+
 export class ModuleEventBus {
   private readonly moduleId:
     string;
@@ -50,6 +66,11 @@ export class ModuleEventBus {
       string,
       RequestHandler
     >();
+
+  private availableActions: RegisteredActionDefinition[] = [];
+
+  private readonly actionsChangedHandlers =
+    new Set<ActionsChangedHandler>();
 
   private readonly handleMessage =
     (
@@ -80,6 +101,10 @@ export class ModuleEventBus {
         message.kind ===
         'event'
       ) {
+        if (message.type === 'actions.updated') {
+          this.handleActionsUpdated(message);
+        }
+
         this.dispatchEvent(
           message
         );
@@ -206,6 +231,23 @@ export class ModuleEventBus {
     };
   }
 
+  registerActions(actions: ActionDefinition[]): Promise<void> {
+    return this.request<void>('actions.register', { actions });
+  }
+
+  getAvailableActions(): RegisteredActionDefinition[] {
+    return this.availableActions.map(cloneAction);
+  }
+
+  onActionsChanged(handler: ActionsChangedHandler): () => void {
+    this.actionsChangedHandlers.add(handler);
+    handler(this.getAvailableActions());
+
+    return () => {
+      this.actionsChangedHandlers.delete(handler);
+    };
+  }
+
   request<T>(
     type: string,
     payload?: unknown
@@ -282,6 +324,21 @@ export class ModuleEventBus {
     this.pending.clear();
     this.eventHandlers.clear();
     this.requestHandlers.clear();
+    this.actionsChangedHandlers.clear();
+    this.availableActions = [];
+  }
+
+  private handleActionsUpdated(message: HostEventMessage): void {
+    const payload = message.payload as {
+      actions?: RegisteredActionDefinition[];
+    } | undefined;
+    if (!Array.isArray(payload?.actions)) return;
+
+    this.availableActions = payload.actions.map(cloneAction);
+    const snapshot = this.getAvailableActions();
+    for (const handler of this.actionsChangedHandlers) {
+      handler(snapshot.map(cloneAction));
+    }
   }
 
   private dispatchEvent(
