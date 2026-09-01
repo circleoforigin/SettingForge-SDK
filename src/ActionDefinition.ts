@@ -3,6 +3,8 @@ export type ActionFieldType =
   | 'number'
   | 'boolean';
 
+export type ActionDelivery = 'transient' | 'state';
+
 export interface ActionFieldDefinition {
   key: string;
   label: string;
@@ -14,6 +16,7 @@ export interface ActionDefinition {
   label: string;
   description?: string;
   fields?: ActionFieldDefinition[];
+  delivery?: ActionDelivery;
 }
 
 export interface RegisteredActionDefinition extends ActionDefinition {
