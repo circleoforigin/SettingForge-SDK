@@ -27,3 +27,10 @@ export type {
   HostResponseMessage,
   HostMessage,
 } from './HostMessage';
+
+export type {
+  ProjectLoadRequest,
+  ProjectLoadAcceptedPayload,
+  ProjectLoadedPayload,
+  ProjectLoadFailedPayload,
+} from './ProjectLifecycle';
