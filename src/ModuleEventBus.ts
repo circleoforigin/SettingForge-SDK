@@ -307,7 +307,10 @@ export class ModuleEventBus {
   command<T>(
   targetModuleId: string,
   type: string,
-  payload?: unknown
+  payload?: unknown,
+  options?: {
+    focus?: boolean
+  }
 ): Promise<T> {
   if (!this.hosted) {
     return Promise.reject(
@@ -357,6 +360,8 @@ export class ModuleEventBus {
             this.moduleId,
 
           targetModuleId,
+
+          focusTarget: options?.focus === true,
 
           type,
 
