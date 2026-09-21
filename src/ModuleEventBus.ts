@@ -304,6 +304,73 @@ export class ModuleEventBus {
     );
   }
 
+  command<T>(
+  targetModuleId: string,
+  type: string,
+  payload?: unknown
+): Promise<T> {
+  if (!this.hosted) {
+    return Promise.reject(
+      new Error(
+        'SettingForge host is not available.'
+      )
+    );
+  }
+
+  if (!targetModuleId.trim()) {
+    return Promise.reject(
+      new Error(
+        'A target module is required.'
+      )
+    );
+  }
+
+  const id =
+    crypto.randomUUID();
+
+  return new Promise<T>(
+    (
+      resolve,
+      reject
+    ) => {
+      this.pending.set(
+        id,
+        {
+          resolve:
+            (value) =>
+              resolve(
+                value as T
+              ),
+
+          reject,
+        }
+      );
+
+      window.parent.postMessage(
+        {
+          kind:
+            'request',
+
+          id,
+
+          sourceModuleId:
+            this.moduleId,
+
+          targetModuleId,
+
+          type,
+
+          timestamp:
+            Date.now(),
+
+          payload,
+        },
+        '*'
+      );
+    }
+  );
+}
+
   destroy(): void {
     window.removeEventListener(
       'message',

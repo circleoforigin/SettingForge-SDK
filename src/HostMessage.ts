@@ -11,6 +11,7 @@ export interface HostRequestMessage {
   kind: 'request';
   id: string;
   sourceModuleId: string;
+  targetModuleId?: string;
   type: string;
   timestamp: number;
   payload?: unknown;
