@@ -1,25 +1,3 @@
-export interface ProjectLoadRequest {
-  projectId: string;
-  loadId: string;
-}
-
-export interface ProjectLoadAcceptedPayload {
-  accepted: true;
-  projectId: string;
-  loadId: string;
-}
-
-export interface ProjectLoadedPayload {
-  projectId: string;
-  loadId: string;
-}
-
-export interface ProjectLoadFailedPayload {
-  projectId: string;
-  loadId: string;
-  error: string;
-}
-
 export interface ProjectSummary {
   projectId: string;
   projectName: string;
@@ -55,4 +33,26 @@ export interface ProjectDeleteRequest {
 export interface ProjectDeleteResponse {
   projectId: string;
   deleted: boolean;
+}
+
+export interface ProjectLoadRequest {
+  projectId: string;
+  loadId: string;
+}
+
+export interface ProjectLoadAcceptedPayload {
+  accepted: true;
+  projectId: string;
+  loadId: string;
+}
+
+export interface ProjectLoadedPayload {
+  projectId: string;
+  loadId: string;
+}
+
+export interface ProjectLoadFailedPayload {
+  projectId: string;
+  loadId: string;
+  error: string;
 }

@@ -54,6 +54,14 @@ export type {
 } from './HostMessage';
 
 export type {
+  ProjectSummary,
+  ProjectListResponse,
+  ProjectCreateRequest,
+  ProjectCreateResponse,
+  ProjectRenameRequest,
+  ProjectRenameResponse,
+  ProjectDeleteRequest,
+  ProjectDeleteResponse,
   ProjectLoadRequest,
   ProjectLoadAcceptedPayload,
   ProjectLoadedPayload,
