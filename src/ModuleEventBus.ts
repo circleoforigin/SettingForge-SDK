@@ -12,14 +12,17 @@ import type {
 
 import type {
   CommandDefinition,
+  RegisteredCommandDefinition,
 } from './CommandDefinition';
 
 import type {
   EventDefinition,
+  RegisteredEventDefinition,
 } from './EventDefinition';
 
 import type {
   QueryDefinition,
+  RegisteredQueryDefinition,
 } from './QueryDefinition';
 
 interface PendingRequest {
@@ -48,6 +51,72 @@ type RequestHandler =
 
 type ActionsChangedHandler =
   (actions: RegisteredActionDefinition[]) => void;
+
+export interface AvailableCapabilities {
+  events: RegisteredEventDefinition[];
+  commands: RegisteredCommandDefinition[];
+  queries: RegisteredQueryDefinition[];
+}
+
+type CapabilitiesChangedHandler =
+  (
+    capabilities:
+      AvailableCapabilities
+  ) => void;
+
+function cloneEvent(
+  event: RegisteredEventDefinition
+): RegisteredEventDefinition {
+  return {
+    ...event,
+    fields:
+      event.fields?.map(
+        (field) => ({
+          ...field,
+        })
+      ),
+  };
+}
+
+function cloneCommand(
+  command: RegisteredCommandDefinition
+): RegisteredCommandDefinition {
+  return {
+    ...command,
+    input:
+      command.input?.map(
+        (field) => ({
+          ...field,
+        })
+      ),
+    output:
+      command.output?.map(
+        (field) => ({
+          ...field,
+        })
+      ),
+  };
+}
+
+function cloneQuery(
+  query: RegisteredQueryDefinition
+): RegisteredQueryDefinition {
+  return {
+    ...query,
+    input:
+      query.input?.map(
+        (field) => ({
+          ...field,
+        })
+      ),
+    output:
+      query.output?.map(
+        (field) => ({
+          ...field,
+        })
+      ),
+  };
+}
 
 function cloneAction(
   action: RegisteredActionDefinition
@@ -83,7 +152,17 @@ export class ModuleEventBus {
   private availableActions: RegisteredActionDefinition[] = [];
 
   private readonly actionsChangedHandlers =
-    new Set<ActionsChangedHandler>();
+  new Set<ActionsChangedHandler>();
+
+private availableCapabilities:
+  AvailableCapabilities = {
+    events: [],
+    commands: [],
+    queries: [],
+  };
+
+private readonly capabilitiesChangedHandlers =
+  new Set<CapabilitiesChangedHandler>();
 
   private readonly handleMessage =
     (
@@ -118,9 +197,11 @@ export class ModuleEventBus {
           this.handleActionsUpdated(message);
         }
 
-        this.dispatchEvent(
-          message
-        );
+        if (message.type === 'capabilities.updated') {
+          this.handleCapabilitiesUpdated(message);
+        }
+
+        this.dispatchEvent(message);
 
         return;
       }
@@ -274,6 +355,41 @@ export class ModuleEventBus {
     };
   }
 
+  getAvailableCapabilities():
+  AvailableCapabilities {
+  return {
+    events:
+      this.availableCapabilities.events
+        .map(cloneEvent),
+
+    commands:
+      this.availableCapabilities.commands
+        .map(cloneCommand),
+
+    queries:
+      this.availableCapabilities.queries
+        .map(cloneQuery),
+  };
+}
+
+onCapabilitiesChanged(
+  handler: CapabilitiesChangedHandler
+): () => void {
+  this.capabilitiesChangedHandlers.add(
+    handler
+  );
+
+  handler(
+    this.getAvailableCapabilities()
+  );
+
+  return () => {
+    this.capabilitiesChangedHandlers.delete(
+      handler
+    );
+  };
+}
+
   request<T>(
     type: string,
     payload?: unknown
@@ -424,7 +540,83 @@ export class ModuleEventBus {
     this.requestHandlers.clear();
     this.actionsChangedHandlers.clear();
     this.availableActions = [];
+
+    this.capabilitiesChangedHandlers.clear();
+
+    this.availableCapabilities = {
+      events: [],
+      commands: [],
+      queries: [],
+    };
   }
+
+  private handleCapabilitiesUpdated(
+  message: HostEventMessage
+): void {
+  const payload =
+    message.payload as
+      | {
+          events?:
+            RegisteredEventDefinition[];
+
+          commands?:
+            RegisteredCommandDefinition[];
+
+          queries?:
+            RegisteredQueryDefinition[];
+        }
+      | undefined;
+
+  if (
+    !Array.isArray(payload?.events) ||
+    !Array.isArray(payload?.commands) ||
+    !Array.isArray(payload?.queries)
+  ) {
+    return;
+  }
+
+  this.availableCapabilities = {
+    events:
+      payload.events.map(
+        cloneEvent
+      ),
+
+    commands:
+      payload.commands.map(
+        cloneCommand
+      ),
+
+    queries:
+      payload.queries.map(
+        cloneQuery
+      ),
+  };
+
+  const snapshot =
+    this.getAvailableCapabilities();
+
+  for (
+    const handler
+    of this.capabilitiesChangedHandlers
+  ) {
+    handler({
+      events:
+        snapshot.events.map(
+          cloneEvent
+        ),
+
+      commands:
+        snapshot.commands.map(
+          cloneCommand
+        ),
+
+      queries:
+        snapshot.queries.map(
+          cloneQuery
+        ),
+    });
+  }
+}
 
   private handleActionsUpdated(message: HostEventMessage): void {
     const payload = message.payload as {
