@@ -67,3 +67,9 @@ export type {
   ProjectLoadedPayload,
   ProjectLoadFailedPayload,
 } from './ProjectLifecycle';
+
+export {
+  projectEventDefinitions,
+  projectCommandDefinitions,
+  projectQueryDefinitions,
+} from './ProjectCapabilities';

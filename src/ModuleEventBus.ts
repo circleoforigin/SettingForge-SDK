@@ -4,10 +4,23 @@ import type {
   HostRequestMessage,
   HostResponseMessage,
 } from './HostMessage';
+
 import type {
   ActionDefinition,
   RegisteredActionDefinition,
 } from './ActionDefinition';
+
+import type {
+  CommandDefinition,
+} from './CommandDefinition';
+
+import type {
+  EventDefinition,
+} from './EventDefinition';
+
+import type {
+  QueryDefinition,
+} from './QueryDefinition';
 
 interface PendingRequest {
   resolve: (
@@ -234,6 +247,19 @@ export class ModuleEventBus {
   registerActions(actions: ActionDefinition[]): Promise<void> {
     return this.request<void>('actions.register', { actions });
   }
+
+  registerCapabilities(
+  capabilities: {
+    events?: EventDefinition[];
+    commands?: CommandDefinition[];
+    queries?: QueryDefinition[];
+  }
+): Promise<void> {
+  return this.request(
+    'capabilities.register',
+    capabilities
+  );
+}
 
   getAvailableActions(): RegisteredActionDefinition[] {
     return this.availableActions.map(cloneAction);
