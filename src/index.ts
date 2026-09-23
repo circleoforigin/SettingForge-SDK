@@ -11,6 +11,31 @@ export type {
 } from './ActionDefinition';
 
 export type {
+  EventFieldType,
+  EventDelivery,
+  EventFieldDefinition,
+  EventDefinition,
+  RegisteredEventDefinition,
+} from './EventDefinition';
+
+export type {
+  ContractValueType,
+  ContractFieldDefinition,
+  CommandDefinition,
+  RegisteredCommandDefinition,
+} from './CommandDefinition';
+
+export type {
+  QueryDefinition,
+  RegisteredQueryDefinition,
+} from './QueryDefinition';
+
+export type {
+  ModuleCapabilitySet,
+  ModulePresence,
+} from './ModuleCapability';
+
+export type {
   ConditionOperator,
   ReactionCondition,
   Reaction,
