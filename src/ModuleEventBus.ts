@@ -6,11 +6,6 @@ import type {
 } from './HostMessage';
 
 import type {
-  ActionDefinition,
-  RegisteredActionDefinition,
-} from './ActionDefinition';
-
-import type {
   CommandDefinition,
   RegisteredCommandDefinition,
 } from './CommandDefinition';
@@ -48,9 +43,6 @@ type RequestHandler =
   ) =>
     | Promise<unknown>
     | unknown;
-
-type ActionsChangedHandler =
-  (actions: RegisteredActionDefinition[]) => void;
 
 export interface AvailableCapabilities {
   events: RegisteredEventDefinition[];
@@ -118,15 +110,6 @@ function cloneQuery(
   };
 }
 
-function cloneAction(
-  action: RegisteredActionDefinition
-): RegisteredActionDefinition {
-  return {
-    ...action,
-    fields: action.fields?.map((field) => ({ ...field })),
-  };
-}
-
 export class ModuleEventBus {
   private readonly moduleId:
     string;
@@ -148,11 +131,6 @@ export class ModuleEventBus {
       string,
       RequestHandler
     >();
-
-  private availableActions: RegisteredActionDefinition[] = [];
-
-  private readonly actionsChangedHandlers =
-  new Set<ActionsChangedHandler>();
 
 private availableCapabilities:
   AvailableCapabilities = {
@@ -193,10 +171,6 @@ private readonly capabilitiesChangedHandlers =
         message.kind ===
         'event'
       ) {
-        if (message.type === 'actions.updated') {
-          this.handleActionsUpdated(message);
-        }
-
         if (message.type === 'capabilities.updated') {
           this.handleCapabilitiesUpdated(message);
         }
@@ -325,10 +299,6 @@ private readonly capabilitiesChangedHandlers =
     };
   }
 
-  registerActions(actions: ActionDefinition[]): Promise<void> {
-    return this.request<void>('actions.register', { actions });
-  }
-
   registerCapabilities(
   capabilities: {
     events?: EventDefinition[];
@@ -341,19 +311,6 @@ private readonly capabilitiesChangedHandlers =
     capabilities
   );
 }
-
-  getAvailableActions(): RegisteredActionDefinition[] {
-    return this.availableActions.map(cloneAction);
-  }
-
-  onActionsChanged(handler: ActionsChangedHandler): () => void {
-    this.actionsChangedHandlers.add(handler);
-    handler(this.getAvailableActions());
-
-    return () => {
-      this.actionsChangedHandlers.delete(handler);
-    };
-  }
 
   getAvailableCapabilities():
   AvailableCapabilities {
@@ -538,8 +495,6 @@ onCapabilitiesChanged(
     this.pending.clear();
     this.eventHandlers.clear();
     this.requestHandlers.clear();
-    this.actionsChangedHandlers.clear();
-    this.availableActions = [];
 
     this.capabilitiesChangedHandlers.clear();
 
@@ -617,19 +572,6 @@ onCapabilitiesChanged(
     });
   }
 }
-
-  private handleActionsUpdated(message: HostEventMessage): void {
-    const payload = message.payload as {
-      actions?: RegisteredActionDefinition[];
-    } | undefined;
-    if (!Array.isArray(payload?.actions)) return;
-
-    this.availableActions = payload.actions.map(cloneAction);
-    const snapshot = this.getAvailableActions();
-    for (const handler of this.actionsChangedHandlers) {
-      handler(snapshot.map(cloneAction));
-    }
-  }
 
   private dispatchEvent(
     message:

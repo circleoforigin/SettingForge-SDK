@@ -3,14 +3,6 @@ export {
 } from './ModuleEventBus';
 
 export type {
-  ActionFieldType,
-  ActionDelivery,
-  ActionFieldDefinition,
-  ActionDefinition,
-  RegisteredActionDefinition,
-} from './ActionDefinition';
-
-export type {
   EventFieldType,
   EventDelivery,
   EventFieldDefinition,
@@ -39,6 +31,11 @@ export type {
   ConditionOperator,
   ReactionCondition,
   Reaction,
+  LegacyReaction,
+} from './Reaction';
+
+export {
+  normalizeReaction,
 } from './Reaction';
 
 export {
