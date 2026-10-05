@@ -70,3 +70,14 @@ export {
   projectCommandDefinitions,
   projectQueryDefinitions,
 } from './ProjectCapabilities';
+
+export type {
+  RulesetInteractionFieldType,
+  RulesetInteractionOption,
+  RulesetInteractionField,
+  RulesetInteractionDefinition,
+} from './RulesetInteraction';
+
+export type {
+  Occurrence,
+} from './Occurrence';
