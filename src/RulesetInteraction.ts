@@ -9,6 +9,30 @@ export interface RulesetInteractionOption {
   label: string;
 }
 
+export type RulesetInteractionDerivedValue =
+  | string
+  | number
+  | boolean
+  | null;
+
+export interface RulesetInteractionDerivedField {
+  id: string;
+  label: string;
+}
+
+export interface RulesetInteractionDerivedDefinition {
+  functionId: string;
+  fields: RulesetInteractionDerivedField[];
+}
+
+export interface RulesetInteractionDerivedResult {
+  values: Record<
+    string,
+    RulesetInteractionDerivedValue
+  >;
+  data?: unknown;
+}
+
 export interface RulesetInteractionField {
   /*
    * Ruleset-owned identity for this value.
@@ -16,13 +40,9 @@ export interface RulesetInteractionField {
    * RulesetExtensionData.values.
    */
   id: string;
-
   label: string;
-
   type: RulesetInteractionFieldType;
-
   description?: string;
-
   required?: boolean;
 
   /*
@@ -63,7 +83,6 @@ export interface RulesetInteractionDefinition {
    * with the definition that produced them.
    */
   schemaId: string;
-
-  fields:
-    RulesetInteractionField[];
+  fields: RulesetInteractionField[];
+  derived?: RulesetInteractionDerivedDefinition;
 }
