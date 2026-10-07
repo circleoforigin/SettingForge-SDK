@@ -74,6 +74,10 @@ export {
 export type {
   RulesetInteractionFieldType,
   RulesetInteractionOption,
+  RulesetInteractionDerivedValue,
+  RulesetInteractionDerivedField,
+  RulesetInteractionDerivedDefinition,
+  RulesetInteractionDerivedResult,
   RulesetInteractionField,
   RulesetInteractionDefinition,
 } from './RulesetInteraction';

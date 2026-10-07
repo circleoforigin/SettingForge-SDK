@@ -1,3 +1,10 @@
+export type OccurrenceType =
+  | 'encounter'
+  | 'weather'
+  | 'almanac'
+  | 'section'
+  | 'player';
+
 export interface Occurrence
 {
   id: string;
@@ -9,6 +16,8 @@ export interface Occurrence
   pieceId: string | null;
   entityId: string | null;
   sectorId: string | null;
+
+  type: OccurrenceType;
 
   title: string;
   description?: string;
