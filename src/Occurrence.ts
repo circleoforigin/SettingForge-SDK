@@ -22,7 +22,6 @@ export type OccurrenceReaction =
 export interface Occurrence
 {
   id: string;
-  prospectId: string;
   sourceModuleId: string;
 
   simulationTime: number;

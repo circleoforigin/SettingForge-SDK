@@ -2,6 +2,6 @@ import type { Occurrence } from './Occurrence';
 
 export interface OccurrenceSubmission
 {
-  prospectId: string;
+  pieceId: string;
   occurrences: Occurrence[];
 }
