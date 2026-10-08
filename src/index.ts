@@ -84,4 +84,9 @@ export type {
 
 export type {
   Occurrence,
+  OccurrenceType,
 } from './Occurrence';
+
+export type {
+  OccurrenceSubmission,
+} from './OccurrenceProducer';
