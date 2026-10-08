@@ -82,9 +82,14 @@ export type {
   RulesetInteractionDefinition,
 } from './RulesetInteraction';
 
+export {
+  OccurrenceReactions,
+} from './Occurrence';
+
 export type {
   Occurrence,
   OccurrenceType,
+  OccurrenceReaction,
 } from './Occurrence';
 
 export type {

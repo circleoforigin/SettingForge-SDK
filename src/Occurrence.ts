@@ -3,7 +3,21 @@ export type OccurrenceType =
   | 'weather'
   | 'almanac'
   | 'section'
+  | 'location'
   | 'player';
+
+export const OccurrenceReactions = {
+  None: 'none',
+  Notify: 'notify',
+  Recalculate: 'recalculate',
+  Interrupt: 'interrupt',
+  End: 'end',
+} as const;
+
+export type OccurrenceReaction =
+  typeof OccurrenceReactions[
+    keyof typeof OccurrenceReactions
+  ];
 
 export interface Occurrence
 {
@@ -17,12 +31,12 @@ export interface Occurrence
   entityId: string | null;
   sectorId: string | null;
 
-  type: OccurrenceType;
+  type?: OccurrenceType;
 
-  title: string;
+  title?: string;
   description?: string;
 
-  tags: string[];
+  reaction: OccurrenceReaction;
 
   payload?: unknown;
 }
