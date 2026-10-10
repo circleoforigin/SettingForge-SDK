@@ -31,6 +31,7 @@ export interface Occurrence
   sectorId: string | null;
 
   type?: OccurrenceType;
+  displayLabel?: string;
 
   title?: string;
   description?: string;
