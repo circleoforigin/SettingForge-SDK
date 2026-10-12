@@ -3,8 +3,9 @@ export type OccurrenceType =
   | 'weather'
   | 'almanac'
   | 'section'
+  | 'path'
   | 'location'
-  | 'player';
+  | 'character';
 
 export const OccurrenceReactions = {
   None: 'none',
