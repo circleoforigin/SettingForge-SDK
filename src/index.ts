@@ -83,6 +83,11 @@ export type {
 } from './RulesetInteraction';
 
 export {
+  createSeed,
+  deriveSeed,
+} from './Seed';
+
+export {
   OccurrenceReactions,
 } from './Occurrence';
 
