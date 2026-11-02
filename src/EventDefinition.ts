@@ -1,7 +1,8 @@
 export type EventFieldType =
   | 'string'
   | 'number'
-  | 'boolean';
+  | 'boolean'
+  | 'array';
 
 export type EventDelivery =
   | 'transient'
