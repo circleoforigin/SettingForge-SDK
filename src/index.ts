@@ -85,6 +85,8 @@ export type {
 export {
   createSeed,
   deriveSeed,
+  nextRandomState,
+  createSeededRandom,
 } from './Seed';
 
 export {
